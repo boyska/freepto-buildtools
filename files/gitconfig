@@ -1,0 +1,7 @@
+[color]
+  ui = true
+[color "diff"]
+  whitespace = white reverse
+[alias]
+  ll = log --oneline
+  graph = log --oneline --all --graph --decorate=short

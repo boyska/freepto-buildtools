@@ -1,0 +1,3 @@
+# dyne
+deb http://apt.dyne.org/debian dyne main
+deb-src http://apt.dyne.org/debian dyne main
