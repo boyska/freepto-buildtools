@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+	<channel>
+		<title>Freepto buildlog</title>
+		<description>All build events are here</description>
+		<link>https://github.com/AvANa-BBS/freepto-lb</link>
+	<item>
+	<title>New build</title>
+	<description>skeleton.xml</description>
+	<link>https://github.com/AvANa-BBS/freepto-lb</link>
+	<pubDate>Sun, 13 Oct 2013 12:23:50 +0200</pubDate>
+	</item>
+	<item>
+	<title>New build</title>
+	<description>skeleton.xml</description>
+	<link>https://github.com/AvANa-BBS/freepto-lb</link>
+	<pubDate>Sun, 13 Oct 2013 12:23:54 +0200</pubDate>
+	</item>
+		<!-- this MUST be the last line --></channel></rss>
