@@ -1,0 +1,5 @@
+# Hetzner Repository
+
+# Packages and Security Updates from the Hetzner Debian Mirror
+deb ftp://mirror.hetzner.de/debian/packages wheezy main contrib non-free
+deb ftp://mirror.hetzner.de/debian/security wheezy/updates main contrib non-free
