@@ -1,9 +1,15 @@
+import os
+
 from fabric.api import *
 from fabric.colors import green, red, blue
 from fabric.decorators import runs_once
 from fabtools import require, deb, service
 #from fabric.contrib.files import append, exists
 #from fabric.colors import green
+
+import iputils
+if os.path.exists('conf.py'):
+    import conf
 
 ### UTILITIES
 
@@ -66,7 +72,9 @@ def livebuild(proxy):
 @runs_once
 def webserver():
     pkg('nginx-light')
-    # TODO: configure nginx to serve builds
+    require.file('/etc/nginx/sites-enabled/default',
+                 source='files/nginx', owner='root', group='root',
+                 mode='644')
 
 
 @runs_once
@@ -111,12 +119,12 @@ def net_utils():
 # TASKS
 
 @task
-def base(proxy='localhost:3142'):
+def base(proxy='127.0.0.1:3142'):
     require.file("/etc/apt/apt.conf",
                  contents='Acquire::http { Proxy "http://%s"; };' % proxy)
     keyrings()
     devel()
-    if proxy.startswith('localhost'):
+    if iputils.is_my_ip(proxy.split(':')[0]):
         aptcacher()
     print green("Livebuild")
     livebuild(proxy)
@@ -134,3 +142,8 @@ def fulloptional():
     net_utils()
     doc()
     webserver()
+
+
+@task
+def qemu():
+    pkg('libvirt0 qemu-kvm')
