@@ -3,6 +3,7 @@ from fabric.decorators import runs_once
 from fabtools import require, deb, service
 #from fabric.contrib.files import append, exists
 #from fabric.colors import green
+PROXY='localhost:3142'
 
 ### UTILITIES
 
@@ -47,25 +48,31 @@ def livebuild():
     run('update-rc.d apt-cacher-ng defaults')
     service.start('apt-cacher-ng')
     require.directory('/var/build/')
-    #TODO: configure apt-cacher-ng
-    #TODO: add utilities to build freepto
+    require.fild('/etc/profile.d/proxy.sh',
+                 contents='export http_proxy="http://%s/"' % PROXY,
+                 owner='root', group='root', mode='644')
+    require.file('/usr/local/bin/manualbuild.sh',
+                 source='files/bin/manualbuild.sh', owner='root', group='root',
+                 mode='755')
 
 
 @runs_once
 def webserver():
-    pkg('nginx')
+    pkg('nginx-light')
     #TODO: configure nginx to serve builds
 
 
 @runs_once
 def doc():
-    pkg('live-boot-doc live-config-doc live-debconfig-doc live-manual-txt')
+    pkg('live-boot-doc live-config-doc')
+    #pkg('live-manual-txt')
 
 
 def auto_build(url, repository, branch='master'):
     '''
     this should start a build "reacting" to a github webhook
     '''
+    pass
 
 
 @runs_once
@@ -75,7 +82,7 @@ def sys_utils():
     """
     pkg('zsh', 'psmisc', 'psutils', 'vim', 'less', 'most', 'screen', 'lsof',
         'htop', 'strace', 'ltrace')
-    #TODO: screenrc (escape!)
+    # TODO: screenrc (escape!)
     require.file('/etc/vim/vimrc.local',
                  "syntax enable\nset modeline si ai ic scs bg=dark\n",
                  owner='root', group='root', use_sudo=True)
@@ -101,6 +108,11 @@ def base():
     keyrings()
     devel()
     livebuild()
+
+
+@task
+def update():
+    deb.update_index()
 
 
 @task
