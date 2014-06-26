@@ -141,12 +141,15 @@ def update():
 
 @task
 def fulloptional():
-    base()
     sys_utils()
     net_utils()
     doc()
     webserver()
 
+
+def mount_line(line):
+    if file_update('/etc/fstab', lambda _: text_ensure_line(_, line)):
+        run('mount -a')
 
 @task
 def qemu(central='127.0.0.1'):
@@ -155,9 +158,7 @@ def qemu(central='127.0.0.1'):
     else:
         pkg('nfs-common')
         # TODO: aggiungere questa riga a fstab
-        mount_line = '%s:/var/lib/libvirt/images /var/www nfs defaults 0 0' % \
-            central
-        if file_update('/etc/fstab',
-                       lambda _: text_ensure_line(_, mount_line)):
-            run('mount -a')
+        mount_line('%s:/var/lib/libvirt/images /var/www nfs defaults 0 0' %
+                   central)
+
 
