@@ -8,7 +8,11 @@ TIMEZONE=${3:-Europe/Rome}
 KEYMAP=${4:-it}
 VARIANT=${5:-${LOCALE}}
 DATEFMT='%F_%H.%M'
-export http_proxy="http://localhost:3142/"
+if [ -r /etc/http_proxy ]; then
+	export http_proxy="http://$(cat /etc/http_proxy)/"
+else
+	export http_proxy="http://localhost:3142/"
+fi
 HEAD=""
 imgname=""
 

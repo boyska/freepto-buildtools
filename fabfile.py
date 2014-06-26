@@ -1,9 +1,9 @@
 from fabric.api import *
+from fabric.colors import green, red, blue
 from fabric.decorators import runs_once
 from fabtools import require, deb, service
 #from fabric.contrib.files import append, exists
 #from fabric.colors import green
-PROXY='localhost:3142'
 
 ### UTILITIES
 
@@ -36,20 +36,27 @@ def devel():
     """
     Developer tools installation
     """
-    #TODO: gitconfig
+    # TODO: gitconfig
     deb.install(['build-essential', 'git'])
     require.file('/etc/gitconfig', source='files/gitconfig', use_sudo=True)
 
 
 @runs_once
-def livebuild():
-    pkg('openssh-server live-build python git-core apt-cacher-ng zsh',
-        'debootstrap')
+def aptcacher():
+    pkg('apt-cacher-ng')
     run('update-rc.d apt-cacher-ng defaults')
     service.start('apt-cacher-ng')
+
+
+@runs_once
+def livebuild(proxy):
+    pkg('openssh-server live-build python git-core zsh',
+        'debootstrap')
     require.directory('/var/build/')
-    require.fild('/etc/profile.d/proxy.sh',
-                 contents='export http_proxy="http://%s/"' % PROXY,
+    require.file('/etc/http_proxy', contents="http://%s/" % proxy,
+                 owner='root', group='root', mode='644')
+    require.file('/etc/profile.d/proxy.sh',
+                 contents='export http_proxy="http://%s/"' % proxy,
                  owner='root', group='root', mode='644')
     require.file('/usr/local/bin/manualbuild.sh',
                  source='files/bin/manualbuild.sh', owner='root', group='root',
@@ -59,7 +66,7 @@ def livebuild():
 @runs_once
 def webserver():
     pkg('nginx-light')
-    #TODO: configure nginx to serve builds
+    # TODO: configure nginx to serve builds
 
 
 @runs_once
@@ -101,13 +108,18 @@ def net_utils():
         'dnsutils', 'vnstat', 'iptraf', 'iotop')
 
 
-#### TASKS
+# TASKS
 
 @task
-def base():
+def base(proxy='localhost:3142'):
+    require.file("/etc/apt/apt.conf",
+                 contents='Acquire::http { Proxy "http://%s"; };' % proxy)
     keyrings()
     devel()
-    livebuild()
+    if proxy.startswith('localhost'):
+        aptcacher()
+    print green("Livebuild")
+    livebuild(proxy)
 
 
 @task
