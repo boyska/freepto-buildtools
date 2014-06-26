@@ -9,17 +9,18 @@ KEYMAP=${4:-it}
 VARIANT=${5:-${LOCALE}}
 DATEFMT='%F_%H.%M'
 if [ -r /etc/http_proxy ]; then
-	export http_proxy="http://$(cat /etc/http_proxy)/"
+	export http_proxy="$(cat /etc/http_proxy)"
 else
 	export http_proxy="http://localhost:3142/"
 fi
+echo "vado di proxy $http_proxy"
 HEAD=""
 imgname=""
 
 # CHECK DISK SPACE
 DISKLIMIT=80
-diskusage=`df -H | grep -vE '^Filesystem|tmpfs|cdrom' | grep /dev/sda2 | awk '{ print $5 }' | cut -d'%' -f1`
-if [ $diskusage -gt $DISKLIMIT ]; then
+diskusage=`df -H "$WWW"| tail -n1 | awk '{ print $5 }' | cut -d'%' -f1`
+if [ "$diskusage" -gt "$DISKLIMIT" ]; then
         echo "[ABORT] There isn't enough disk space."
 	echo "Disk usage: ${diskusage}% - Disk limit: ${DISKLIMIT}%"
 	exit 1

@@ -4,6 +4,7 @@ from fabric.api import *
 from fabric.colors import green, red, blue
 from fabric.decorators import runs_once
 from fabtools import require, deb, service
+from cuisine import file_update, text_ensure_line
 #from fabric.contrib.files import append, exists
 #from fabric.colors import green
 
@@ -56,17 +57,21 @@ def aptcacher():
 
 @runs_once
 def livebuild(proxy):
+    print green("Livebuild with " + proxy)
     pkg('openssh-server live-build python git-core zsh',
         'debootstrap')
     require.directory('/var/build/')
     require.file('/etc/http_proxy', contents="http://%s/" % proxy,
-                 owner='root', group='root', mode='644')
+                 owner='root', group='root', mode='644',
+                 verify_remote=True)
     require.file('/etc/profile.d/proxy.sh',
                  contents='export http_proxy="http://%s/"' % proxy,
-                 owner='root', group='root', mode='644')
+                 owner='root', group='root', mode='644',
+                 verify_remote=True)
     require.file('/usr/local/bin/manualbuild.sh',
                  source='files/bin/manualbuild.sh', owner='root', group='root',
-                 mode='755')
+                 mode='755',
+                 verify_remote=True)
 
 
 @runs_once
@@ -126,7 +131,6 @@ def base(proxy='127.0.0.1:3142'):
     devel()
     if iputils.is_my_ip(proxy.split(':')[0]):
         aptcacher()
-    print green("Livebuild")
     livebuild(proxy)
 
 
@@ -145,5 +149,15 @@ def fulloptional():
 
 
 @task
-def qemu():
-    pkg('libvirt0 qemu-kvm')
+def qemu(central='127.0.0.1'):
+    if iputils.is_my_ip(central):
+        pkg('libvirt0 qemu-kvm')
+    else:
+        pkg('nfs-common')
+        # TODO: aggiungere questa riga a fstab
+        mount_line = '%s:/var/lib/libvirt/images /var/www nfs defaults 0 0' % \
+            central
+        if file_update('/etc/fstab',
+                       lambda _: text_ensure_line(_, mount_line)):
+            run('mount -a')
+
