@@ -72,6 +72,10 @@ def livebuild(proxy):
                  source='files/bin/manualbuild.sh', owner='root', group='root',
                  mode='755',
                  verify_remote=True)
+    require.file('/usr/local/bin/gitbuild.sh',
+                 source='files/bin/gitbuild.sh', owner='root', group='root',
+                 mode='755',
+                 verify_remote=True)
 
 
 @runs_once
