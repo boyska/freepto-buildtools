@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+CACHE=/var/cache/build/repo
+
+if [[ ! -d "$CACHE" ]]; then
+	mkdir -p "$(dirname "$CACHE")"
+	git clone "https://github.com/avana-bbs/freepto-lb" "$CACHE"
+	cd "$CACHE"
+	git remote rename origin avana
+	git remote add vinc3nt "https://github.com/vinc3nt/freepto-lb"
+	git remote add paskao "https://github.com/paskao/freepto-lb"
+	git remote add boyska "https://github.com/boyska/freepto-lb"
+	git remote update
+	git reset --hard avana/master
+fi
+

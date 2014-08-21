@@ -112,6 +112,7 @@ fi
 
 
 mv binary.img $imgname
+vboxmanage convertdd  ${imgname} ${imgname%.img}.vdi
 mv build.log ${imgname}.log.txt
 mv binary.contents ${imgname}.contents.txt
 mv chroot.packages.live ${imgname}.packages.txt
@@ -124,6 +125,7 @@ rm -rf $workdir
 # remove old image on /var/www and /var/tmp/build/build*
 find $WWW/ -type f -name "$(basename $BASEDIR)-*" -mtime +3 -delete
 find /var/tmp/build/build* -type f -mtime +1 -delete
+
 
 
 # vim: set ft=sh:

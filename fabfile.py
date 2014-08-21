@@ -1,18 +1,21 @@
 import os
+import base64
 
 from fabric.api import *
-from fabric.colors import green, red, blue
+from fabric.colors import green
 from fabric.decorators import runs_once
+from fabric.context_managers import settings
 from fabtools import require, deb, service
-from cuisine import file_update, text_ensure_line
-#from fabric.contrib.files import append, exists
-#from fabric.colors import green
+from fabtools.utils import run_as_root
+from cuisine import file_exists, file_read, text_ensure_line, shell_safe
+# from fabric.contrib.files import append, exists
+# from fabric.colors import green
 
 import iputils
 if os.path.exists('conf.py'):
     import conf
 
-### UTILITIES
+# UTILITIES
 
 
 def pkg(*args):
@@ -51,31 +54,39 @@ def devel():
 @runs_once
 def aptcacher():
     pkg('apt-cacher-ng')
-    run('update-rc.d apt-cacher-ng defaults')
+    run_as_root('update-rc.d apt-cacher-ng defaults')
     service.start('apt-cacher-ng')
 
 
 @runs_once
 def livebuild(proxy):
     print green("Livebuild with " + proxy)
+
     pkg('openssh-server live-build python git-core zsh',
         'debootstrap')
     require.directory('/var/build/')
+    mount_line('tmpfs /var/tmp tmpfs defaults 0 0')
+    run_as_root('cat /etc/fstab')
     require.file('/etc/http_proxy', contents="http://%s/" % proxy,
                  owner='root', group='root', mode='644',
-                 verify_remote=True)
+                 verify_remote=True, use_sudo=True)
     require.file('/etc/profile.d/proxy.sh',
                  contents='export http_proxy="http://%s/"' % proxy,
                  owner='root', group='root', mode='644',
-                 verify_remote=True)
+                 verify_remote=True, use_sudo=True)
+
     require.file('/usr/local/bin/manualbuild.sh',
                  source='files/bin/manualbuild.sh', owner='root', group='root',
                  mode='755',
-                 verify_remote=True)
+                 verify_remote=True, use_sudo=True)
     require.file('/usr/local/bin/gitbuild.sh',
                  source='files/bin/gitbuild.sh', owner='root', group='root',
                  mode='755',
-                 verify_remote=True)
+                 verify_remote=True, use_sudo=True)
+    require.file('/etc/cron.daily/cacherepo',
+                 source='files/bin/cron_cacherepo', owner='root', group='root',
+                 mode='755',
+                 verify_remote=True, use_sudo=True)
 
 
 @runs_once
@@ -89,7 +100,7 @@ def webserver():
 @runs_once
 def doc():
     pkg('live-boot-doc live-config-doc')
-    #pkg('live-manual-txt')
+    # pkg('live-manual-txt')
 
 
 def auto_build(url, repository, branch='master'):
@@ -129,13 +140,14 @@ def net_utils():
 
 @task
 def base(proxy='127.0.0.1:3142'):
-    require.file("/etc/apt/apt.conf",
-                 contents='Acquire::http { Proxy "http://%s"; };' % proxy)
-    keyrings()
-    devel()
-    if iputils.is_my_ip(proxy.split(':')[0]):
-        aptcacher()
-    livebuild(proxy)
+    with settings(use_sudo=True):
+        require.file("/etc/apt/apt.conf",
+                     contents='Acquire::http { Proxy "http://%s"; };' % proxy)
+        keyrings()
+        devel()
+        if iputils.is_my_ip(proxy.split(':')[0]):
+            aptcacher()
+        livebuild(proxy)
 
 
 @task
@@ -151,9 +163,27 @@ def fulloptional():
     webserver()
 
 
+def file_update(location, updater=lambda x: x, use_sudo=False):
+    """
+    Updates the content of the given by passing the existing
+    content of the remote file at the given location to the 'updater'
+    function. Return true if file content was changed.
+    """
+    assert file_exists(location), "File does not exists: " + location
+    old_content = file_read(location)
+    new_content = updater(old_content)
+    if (old_content == new_content):
+        return False
+    runner = run_as_root if env.use_sudo or use_sudo else run
+    runner('echo "%s" | openssl base64 -A -d -out %s' %
+           (base64.b64encode(new_content), shell_safe(location)))
+    return True
+
+
 def mount_line(line):
     if file_update('/etc/fstab', lambda _: text_ensure_line(_, line)):
-        run('mount -a')
+        run_as_root('mount -a')
+
 
 @task
 def qemu(central='127.0.0.1'):
@@ -161,8 +191,5 @@ def qemu(central='127.0.0.1'):
         pkg('libvirt0 qemu-kvm')
     else:
         pkg('nfs-common')
-        # TODO: aggiungere questa riga a fstab
         mount_line('%s:/var/lib/libvirt/images /var/www nfs defaults 0 0' %
                    central)
-
-
