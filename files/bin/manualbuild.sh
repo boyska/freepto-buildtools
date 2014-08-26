@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-### This is similar to newbuild.sh, but better fits manual builds, where
-### automatical git update operations are not wanted
+### given a directory, it will build the image inside, then put it under $WWW
+
 WWW=/var/www/dev
 BASEDIR=${1%/} #strip slash
 LOCALE=${2:-it_IT.UTF-8}
 TIMEZONE=${3:-Europe/Rome}
 KEYMAP=${4:-it}
-VARIANT=${5:-${LOCALE}}
-DATEFMT='%F_%H.%M'
+VARIANT=${5:-${LOCALE::2}}
+DATEFMT='%y%m%d_%H.%M'
 if [ -r /etc/http_proxy ]; then
 	export http_proxy="$(cat /etc/http_proxy)"
 else

@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+KVM=${KVM:-kvm}
+MEM=${MEM:-900}
+VNCPORT=${VNCPORT:-0}
+img=$1
+shift
+
+if [ -z "$img"  ]; then
+    echo "Usage: $0 IMGFILE [other qemu args]..."
+    echo ""
+    echo "You can customize some options using env vars, for example"
+    echo "    MEM=2048 $0 my.img"
+    exit 2
+fi
+
+$KVM -vnc 127.0.0.1:${VNCPORT} -m $MEM -hda "$img" $*

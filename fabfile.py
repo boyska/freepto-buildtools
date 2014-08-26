@@ -94,7 +94,7 @@ def webserver():
     pkg('nginx-light')
     require.file('/etc/nginx/sites-enabled/default',
                  source='files/nginx', owner='root', group='root',
-                 mode='644')
+                 mode='644', use_sudo=True)
 
 
 @runs_once
@@ -119,7 +119,7 @@ def sys_utils():
         'htop', 'strace', 'ltrace')
     # TODO: screenrc (escape!)
     require.file('/etc/vim/vimrc.local',
-                 "syntax enable\nset modeline si ai ic scs bg=dark\n",
+                 contents="syntax enable\nset modeline si ai ic scs bg=dark\n",
                  owner='root', group='root', use_sudo=True)
     require.file('/etc/zsh/zshrc', source='files/shell/zshrc', owner='root',
                  group='root', use_sudo=True)
@@ -142,7 +142,8 @@ def net_utils():
 def base(proxy='127.0.0.1:3142'):
     with settings(use_sudo=True):
         require.file("/etc/apt/apt.conf",
-                     contents='Acquire::http { Proxy "http://%s"; };' % proxy)
+                     contents='Acquire::http { Proxy "http://%s"; };' % proxy,
+                     use_sudo=True)
         keyrings()
         devel()
         if iputils.is_my_ip(proxy.split(':')[0]):
@@ -152,15 +153,17 @@ def base(proxy='127.0.0.1:3142'):
 
 @task
 def update():
-    deb.update_index()
+    with settings(use_sudo=True):
+        deb.update_index()
 
 
 @task
 def fulloptional():
-    sys_utils()
-    net_utils()
-    doc()
-    webserver()
+    with settings(use_sudo=True):
+        sys_utils()
+        net_utils()
+        doc()
+        webserver()
 
 
 def file_update(location, updater=lambda x: x, use_sudo=False):
