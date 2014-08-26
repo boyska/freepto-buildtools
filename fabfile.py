@@ -14,6 +14,7 @@ from cuisine import file_exists, file_read, text_ensure_line, shell_safe
 import iputils
 if os.path.exists('conf.py'):
     import conf
+from man import require_man
 
 # UTILITIES
 
@@ -190,8 +191,13 @@ def mount_line(line):
 
 @task
 def qemu(central='127.0.0.1'):
+    require_man(7, 'online-testing', use_sudo=True)
     if iputils.is_my_ip(central):
         pkg('libvirt0 qemu-kvm')
+        require.file('/usr/local/bin/emu-vnc',
+                     source='files/bin/emu-vnc', owner='root', group='root',
+                     mode='755',
+                     verify_remote=True, use_sudo=True)
     else:
         pkg('nfs-common')
         mount_line('%s:/var/lib/libvirt/images /var/www nfs defaults 0 0' %
