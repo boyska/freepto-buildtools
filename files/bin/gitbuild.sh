@@ -25,14 +25,22 @@ BASEDIR="$PARENT/${REF//\//+}"
 
 cp -r "$CACHE" "$BASEDIR"
 
+echo "Updating..."
 git --git-dir "$BASEDIR/.git" --work-tree "$BASEDIR" remote update
+echo "Checkout!"
 git --git-dir "$BASEDIR/.git" --work-tree "$BASEDIR" checkout "$REF"
+echo "Fetching submodules..."
+(cd "$BASEDIR"; \
+    git submodule init && \
+    git submodule update)
+
 ret=$?
 if [[ $ret -ne 0 ]]; then
 	echo "Error during git checkout: $?"
 	exit $?
 fi
 
+echo "Ready to build"
 manualbuild.sh $BASEDIR $*
 
 # vim: set ft=sh:
