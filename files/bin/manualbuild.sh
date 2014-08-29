@@ -67,7 +67,7 @@ if [ "$avail_mega" -lt 5000 ]; then
 	exit 5
 fi
 workdir=$(mktemp -d /var/tmp/build/build_$(basename $BASEDIR).XXXXX)
-rsync -r --links --exclude=.git $BASEDIR/ $workdir/
+rsync -r --links $BASEDIR/ $workdir/
 
 cleanup()
 {
@@ -89,11 +89,13 @@ pwd
 lb clean
 
 mkdir -p /var/log/build
-if ! ./freepto-config.sh -l $LOCALE -z $TIMEZONE -k $KEYMAP 2>&1 | tee -a /var/log/build/$(basename $BASEDIR).log; then
-	echo "errori nel config"
-	cd ~
-	#rm -rf $workdir
-	exit 2
+if [[ -x freepto-config.sh ]]; then
+	if ! ./freepto-config.sh -l $LOCALE -z $TIMEZONE -k $KEYMAP 2>&1 | tee -a /var/log/build/$(basename $BASEDIR).log; then
+		echo "errori nel config"
+		cd ~
+		#rm -rf $workdir
+		exit 2
+	fi
 fi
 
 if ! lb build 2>&1 | tee -a /var/log/build/$(basename $BASEDIR).log; then
