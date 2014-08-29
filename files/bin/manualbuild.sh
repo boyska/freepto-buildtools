@@ -114,6 +114,9 @@ fi
 mv binary.img $imgname
 vboxmanage convertdd  ${imgname} ${imgname%.img}.vdi
 mv build.log ${imgname}.log.txt
+if [[ -r pkgs.log ]]; then
+	mv pkgs.log ${imgname}.pkgs_log.txt
+fi
 mv binary.contents ${imgname}.contents.txt
 mv chroot.packages.live ${imgname}.packages.txt
 sha512sum ${imgname} > ${imgname}.sha512sum.txt
