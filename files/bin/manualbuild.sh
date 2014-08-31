@@ -113,16 +113,20 @@ then
 fi
 
 
-mv binary.img $imgname
-vboxmanage convertdd  ${imgname} ${imgname%.img}.vdi
+### "Extra" files
+mv binary.contents ${imgname}.contents.txt
+mv chroot.packages.live ${imgname}.packages.txt
+git log -n 20 --decorate=short --stat > ${imgname}.history.txt
+cat config/freepto config/freepto.local > ${imgname}.config.txt
 mv build.log ${imgname}.log.txt
 if [[ -r pkgs.log ]]; then
 	mv pkgs.log ${imgname}.pkgs_log.txt
 fi
-mv binary.contents ${imgname}.contents.txt
-mv chroot.packages.live ${imgname}.packages.txt
+
+### Image itself
+mv binary.img $imgname
+vboxmanage convertdd  ${imgname} ${imgname%.img}.vdi
 sha512sum ${imgname} > ${imgname}.sha512sum.txt
-git log -n 20 --decorate=short --stat > ${imgname}.history.txt
 
 cd ~
 rm -rf $workdir
