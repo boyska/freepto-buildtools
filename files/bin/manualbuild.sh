@@ -88,9 +88,15 @@ pwd
 
 lb clean
 
+# Info files known in advance
+git log -n 20 --decorate=short --stat > ${imgname}.history.txt
+cp config/freepto ${imgname}.config.txt
+[[ -r config/freepto.local ]] && cat config/freepto.local >> ${imgname}.config.txt
+log="${imgname}.log.txt"
+
 mkdir -p /var/log/build
 if [[ -x freepto-config.sh ]]; then
-	if ! ./freepto-config.sh -l $LOCALE -z $TIMEZONE -k $KEYMAP 2>&1 | tee -a /var/log/build/$(basename $BASEDIR).log; then
+	if ! ./freepto-config.sh -l $LOCALE -z $TIMEZONE -k $KEYMAP 2>&1 | tee -a "$log" ; then
 		echo "errori nel config"
 		cd ~
 		#rm -rf $workdir
@@ -98,7 +104,7 @@ if [[ -x freepto-config.sh ]]; then
 	fi
 fi
 
-if ! lb build 2>&1 | tee -a /var/log/build/$(basename $BASEDIR).log; then
+if ! lb build 2>&1 | tee -a "$log" ; then
 	echo "errori nel build"
 	cd ~
 	#rm -rf $workdir
@@ -116,10 +122,7 @@ fi
 ### "Extra" files
 mv binary.contents ${imgname}.contents.txt
 mv chroot.packages.live ${imgname}.packages.txt
-git log -n 20 --decorate=short --stat > ${imgname}.history.txt
-cat config/freepto config/freepto.local > ${imgname}.config.txt
-mv build.log ${imgname}.log.txt
-if [[ -r pkgs.log ]]; then
+if [[ -f pkgs.log ]]; then
 	mv pkgs.log ${imgname}.pkgs_log.txt
 fi
 
