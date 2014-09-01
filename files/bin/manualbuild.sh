@@ -129,7 +129,9 @@ fi
 ### Image itself
 mv binary.img $imgname
 vboxmanage convertdd  ${imgname} ${imgname%.img}.vdi
+chmod a+r ${imgname%.img}.vdi
 sha512sum ${imgname} > ${imgname}.sha512sum.txt
+sha512sum ${imgname%.img}.vdi > ${imgname%.img}.vdi.sha512sum.txt
 
 cd ~
 rm -rf $workdir
