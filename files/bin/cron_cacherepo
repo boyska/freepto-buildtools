@@ -12,5 +12,10 @@ if [[ ! -d "$CACHE" ]]; then
 	git remote add boyska "https://github.com/boyska/freepto-lb"
 	git remote update
 	git reset --hard avana/master
+else
+    cd "$CACHE"
+    git remote update
+    git reset --hard avana/master
+
 fi
 

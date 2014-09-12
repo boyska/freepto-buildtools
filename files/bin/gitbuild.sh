@@ -20,7 +20,7 @@ if [[ ! -d "$CACHE" ]]; then
 fi
 
 mkdir -p "$TMP"
-PARENT=$(mktemp -d "$TMP/build.XXXXXXX")
+PARENT=$(mktemp -d "$TMP/git.XXXXXXX")
 BASEDIR="$PARENT/${REF//\//+}"
 
 cp -r "$CACHE" "$BASEDIR"
