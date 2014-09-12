@@ -128,8 +128,12 @@ fi
 
 ### Image itself
 mv binary.img $imgname
-vboxmanage convertdd  ${imgname} ${imgname%.img}.vdi
-chmod a+r ${imgname%.img}.vdi
+if ! vboxmanage convertdd  ${imgname} ${imgname%.img}.vdi; then
+    echo "vboxmanage error $?"
+fi
+if [ -f ${imgname%.img}.vdi ]; then
+    chmod a+r ${imgname%.img}.vdi
+fi
 sha512sum ${imgname} > ${imgname}.sha512sum.txt
 sha512sum ${imgname%.img}.vdi > ${imgname%.img}.vdi.sha512sum.txt
 
