@@ -1,12 +1,25 @@
 #!/usr/bin/env bash
 ### given a directory, it will build the image inside, then put it under $WWW
 
+VARIANT=
+if [ -n "${LB_ADDITIONAL_CONF}" ] && [ -r "${LB_ADDITIONAL_CONF}" ]; then
+	echo "Reading additional configuration files..." >&2
+	source "${LB_ADDITIONAL_CONF}"
+fi
+
+while getopts 'v:' opt; do
+	case $opt in
+		v)
+			VARIANT="-${OPTARG}"
+			;;
+		\?)
+			exit 2
+			;;
+	esac
+done
+
 WWW=/var/www/dev
 BASEDIR=${1%/} #strip slash
-LOCALE=${2:-it_IT.UTF-8}
-TIMEZONE=${3:-Europe/Rome}
-KEYMAP=${4:-it}
-VARIANT=${5:-${LOCALE::2}}
 DATEFMT='%y%m%d_%H.%M'
 if [ -r /etc/http_proxy ]; then
 	export http_proxy="$(cat /etc/http_proxy)"
@@ -45,7 +58,7 @@ export GIT_DIR=$GIT_WORK_TREE/.git
 HEAD=$(git rev-parse HEAD | head -c 6)
 builddate=$(date +$DATEFMT)
 commitdesc=$(git describe --tags --long)
-imgdesc="${builddate}_$commitdesc-$VARIANT"
+imgdesc="${builddate}_$commitdesc$VARIANT"
 imgname="${WWW%/}/$(basename $BASEDIR)/${imgdesc}/${imgdesc}.img"
 mkdir -p "${WWW%/}/$(basename $BASEDIR)/${imgdesc}"
 echo "Target name will be $imgname"
