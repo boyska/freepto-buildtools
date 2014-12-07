@@ -91,23 +91,21 @@ lb clean
 # Info files known in advance
 git log -n 20 --decorate=short --stat > ${imgname}.history.txt
 cp config/freepto ${imgname}.config.txt
-[[ -r config/freepto.local ]] && cat config/freepto.local >> ${imgname}.config.txt
 log="${imgname}.log.txt"
 
 mkdir -p /var/log/build
-if [[ -x freepto-config.sh ]]; then
-	if ! ./freepto-config.sh -l $LOCALE -z $TIMEZONE -k $KEYMAP 2>&1 | tee -a "$log" ; then
-		echo "errori nel config"
-		cd ~
-		#rm -rf $workdir
-		exit 2
-	fi
+
+if ! lb config 2>&1 | tee -a "$log" ; then
+	echo "errori nel config"
+	cd ~
+	exit 3
 fi
+
+[[ -r config/freepto.local ]] && cat config/freepto.local >> ${imgname}.config.txt
 
 if ! lb build 2>&1 | tee -a "$log" ; then
 	echo "errori nel build"
 	cd ~
-	#rm -rf $workdir
 	exit 3
 fi
 
